@@ -130,7 +130,7 @@ The main logic of the application (`app.py`) is divided into the following steps
 
 ## **🛠️ Possible Future Improvements**  
 - **🔁 Additional Visualizations**: Add comparative views, heatmaps, and advanced statistics.  
-- **🌐 Multi-language Support**: Enable support for multiple languages (e.g., Hebrew, Arabic).  
+
 - **🔎 Advanced Filters**: Filter by regions, vote thresholds, or specific parties.  
 - **🔋 Performance Optimization**: Handle larger datasets more efficiently.  
 - **🔑 Data Export**: Allow users to download filtered data as CSV or Excel files.  
