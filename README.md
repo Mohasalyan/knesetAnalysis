@@ -1,39 +1,42 @@
-
-# **🎉 Knesset Elections Data Analysis and Visualization Project**  
+# **🎉 Knesset Elections Data Analysis and Visualization Project**
 
 ## **📘 Project Overview**  
-The **Knesset Elections Data Analysis and Visualization Project** is an interactive, user-friendly web application built using **Streamlit** and **Pandas**. It allows users to explore and analyze voting patterns from the **25th Knesset elections**.  
+The **Knesset Elections Data Analysis and Visualization Project** is an interactive, user-friendly application built using **Streamlit** and **Pandas**. It allows users to explore and analyze voting patterns from the **25th Knesset elections**.  
 
-With dynamic visualizations and easy-to-navigate features, this project is perfect for researchers, students, and anyone interested in uncovering insights about election results across different cities and political parties.  
+With dynamic visualizations and easy-to-navigate features, this project is ideal for researchers, students, and anyone interested in gaining insights into election results across different cities and political parties.
 
 ---
 
 ## **🎯 Key Features**  
-- **🔍 Interactive Exploration**: A clean, intuitive interface to interact with election data.  
-- **🏙 City-Based Analysis**: Filter data by selecting a specific city from a dropdown menu.  
-- **📊 Dynamic Visualizations**: Interactive charts (line and bar charts) to compare voting patterns.  
-- **📄 Raw Data View**: Browse through detailed voting results in a clear, tabular format.  
+- **🔍 Interactive Exploration**: A clean and intuitive interface to interact with election data.  
+- **🏛 City-Based Analysis**: Filter data by selecting specific cities.  
+- **📊 Dynamic Visualizations**: Interactive charts (scatter and bar charts) to compare voting patterns.  
+- **🗃️ Raw Data View**: Browse through detailed voting results in a clear, tabular format.  
 - **🚀 Real-Time Updates**: Data and charts update dynamically based on user selections.  
 
 ---
 
-## **📂 Project Structure**  
+## **🗁 Project Structure**  
 ```plaintext
-project-folder/
+TASK1/
 ├── 📁 data
-│   └── knesset_25.xlsx      # Excel file containing voting results
-├── 📄 Streamlit_app.py      # Main Streamlit application logic
-└── 📄 README.md             # Project documentation (this file)
+│   └── knesset_25.xlsx         # Excel file containing voting results
+├── 🔢 All Functions.py      # Consolidated functions for reuse
+├── 📃 app.py                 # Main Streamlit application logic
+├── 🔢 Data Preprocessing.ipynb # Data cleaning and transformation notebook
+├── 🔢 Data Visualization.ipynb # Notebooks for visualization experiments
+├── 🔢 Knesset Data Analysis Project.ipynb # Core analysis logic notebook
+└── 📃 README.md            # Project documentation (this file)
 ```
 
 ---
 
 ## **🚀 Technologies Used**  
 - **Python**: Core programming language for processing and analysis.  
-- **Pandas**: Data manipulation and aggregation.  
-- **Streamlit**: Simplified web application for data visualization.  
-- **Plotly**: Interactive, dynamic charts for better user experience.  
-- **Excel**: Dataset stored in an Excel format for accessibility.  
+- **Pandas**: For efficient data manipulation and aggregation.  
+- **Streamlit**: To create an interactive and intuitive web application.  
+- **Plotly**: For interactive, dynamic visualizations.  
+- **Excel**: Dataset stored in an accessible Excel format.  
 
 ---
 
@@ -46,9 +49,9 @@ To run this project on your local machine:
    pip install streamlit pandas openpyxl plotly
    ```
 
-2. **Run the Streamlit Application**:  
+2. **Run the Application**:  
    ```bash
-   streamlit run Streamlit_app.py
+   streamlit run app.py
    ```
 
 3. **View the Application**:  
@@ -72,18 +75,18 @@ The main dataset is stored in `knesset_25.xlsx` and has the following structure:
 
 ## **📱 How to Use the Application**  
 
-1. **Start the Application**: Run the command `streamlit run Streamlit_app.py`.  
+1. **Start the Application**: Run the command `streamlit run app.py`.  
 2. **Explore the Data**:  
    - Use the **City Dropdown** to select a city and view its voting data.  
    - Browse the raw **Data Table** to see detailed results.  
-   - Analyze the interactive **Line Chart** that visualizes votes per party.  
+   - Analyze the interactive **Charts** that visualize votes per party.  
 3. **Compare Results**: Switch between cities to analyze differences in voting patterns.  
 
 ---
 
-## **📋 Code Walkthrough**  
+## **🔢 Code Walkthrough**  
 
-The main logic of the application (`Streamlit_app.py`) is divided into the following steps:  
+The main logic of the application (`app.py`) is divided into the following steps:  
 
 1. **Import Libraries**:  
    ```python
@@ -113,7 +116,7 @@ The main logic of the application (`Streamlit_app.py`) is divided into the follo
    city_data = data[data["city_name"] == city]
 
    # Plot Chart
-   chart = px.line(
+   chart = px.bar(
        city_data.melt(id_vars=["city_name"], value_vars=data.columns[2:]),
        x="variable",
        y="value",
@@ -126,30 +129,23 @@ The main logic of the application (`Streamlit_app.py`) is divided into the follo
 ---
 
 ## **🛠️ Possible Future Improvements**  
-- **📈 Additional Visualizations**: Bar charts, heatmaps, and comparative views for deeper analysis.  
+- **🔁 Additional Visualizations**: Add comparative views, heatmaps, and advanced statistics.  
+- **🌐 Multi-language Support**: Enable support for multiple languages (e.g., Hebrew, Arabic).  
 - **🔎 Advanced Filters**: Filter by regions, vote thresholds, or specific parties.  
-- **🌍 Multi-language Support**: Enable the application in English, Hebrew, or other languages.  
-- **💾 Data Export**: Allow users to download filtered data as Excel or CSV files.  
-- **🎨 Enhanced UI**: Improve the design with better themes and user experience.  
+- **🔋 Performance Optimization**: Handle larger datasets more efficiently.  
+- **🔑 Data Export**: Allow users to download filtered data as CSV or Excel files.  
 
 ---
 
-## **📚 Resources**  
-- [Streamlit Documentation](https://docs.streamlit.io/)  
-- [Pandas Documentation](https://pandas.pydata.org/docs/)  
-- [Plotly for Python](https://plotly.com/python/)  
-- [Python Official Documentation](https://www.python.org/)  
-
----
-
-## **✨ Contributing**  
+## **🔖 Contributing**  
 We welcome contributions to improve this project! Feel free to fork, open issues, or submit pull requests.  
 
 ---
 
-## **🤝 Acknowledgments**  
+## **🙏 Acknowledgments**  
 This project was inspired by the need for accessible election data analysis tools to empower researchers and enthusiasts.  
 
 ---
 
-**🚀 Get started now and explore the voting results in a dynamic, interactive way!**  
+**🚀 Start exploring the Knesset elections data now!**
+
