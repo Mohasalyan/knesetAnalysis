@@ -112,4 +112,4 @@ elif page == "הפחתת ממדים באמצעות PCA":
     fig = px.scatter(cleaned_reduced_df, x='PC1', y='PC2', hover_data=['city_name'], title="המחשה של PCA")
     st.plotly_chart(fig)
 
-st.sidebar.write("\U0001F680 **פותח על ידי מוחמד**")
+st.sidebar.write("\U0001F680 **פותח על ידי הקבוצה המעולה **")
