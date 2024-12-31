@@ -1,7 +1,7 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
+import streamlit as st # type: ignore
+import pandas as pd # type: ignore
+import numpy as np # type: ignore
+import plotly.express as px # type: ignore
 
 # ====================== טעינת הנתונים ======================
 @st.cache_data
