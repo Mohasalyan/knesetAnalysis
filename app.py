@@ -1,115 +1,144 @@
-import streamlit as st # type: ignore
-import pandas as pd # type: ignore
-import numpy as np # type: ignore
-import plotly.express as px # type: ignore
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from functions import (
+    group_and_aggregate_data,
+    remove_sparse_columns,
+    dimensionality_reduction
+)
 
-# ====================== טעינת הנתונים ======================
-@st.cache_data
-def load_data(file_path: str):
-    """טעינת קובץ Excel לתוך DataFrame של pandas."""
-    return pd.read_excel(file_path)
+st.title("Knesset Elections Analysis")
 
-file_path = 'data/knesset_25.xlsx'
-data = load_data(file_path)
+st.write("A Streamlit UI that allows uploading data, grouping, sparse-column removal, PCA, and visualizations.")
 
-# ====================== ניקוי הנתונים ======================
-def clean_transposed_df(df: pd.DataFrame) -> pd.DataFrame:
-    """תסיר עמודות לא חוקיות והמר ערכים לא תואמים לפורמט תומך."""
-    df = df.copy()
-    df = df.dropna(axis=1, how='all')  # מחיקת עמודות ריקות
-    df = df.applymap(lambda x: str(x) if pd.api.types.is_scalar(x) else 'NaN')
-    df.replace('NaN', np.nan, inplace=True)  # החלפת טקסט NaN בערך NaN
-    return df.fillna(0)  # מילוי NaN ב-0
+uploaded_file = st.file_uploader("Upload a CSV or Excel file:", type=["csv", "xlsx"])
 
-# ====================== ניווט בסרגל הצד ======================
-st.sidebar.title("\U0001F4CA אפליקציית ניתוח תוצאות הבחירות")
-st.sidebar.write("**בחר את הפעולה שברצונך לבצע:**")
+if uploaded_file is not None:
+    # Detect file type directly from the uploaded file
+    file_name = uploaded_file.name.lower()
+    if file_name.endswith('.csv'):
+        df = pd.read_csv(uploaded_file)
+    else:
+        df = pd.read_excel(uploaded_file)
 
-page = st.sidebar.radio("דפים:", [
-    "הצגת הנתונים",
-    "ניתוח נתונים לפי ערים",
-    "ניתוח נתונים לפי מפלגות",
-    "הפחתת ממדים באמצעות PCA",
-])
+    st.subheader("1) Dataset Preview")
+    st.dataframe(df.head())
 
-# ====================== פונקציית ניקוי נתונים ======================
-def clean_data(df: pd.DataFrame, meta_columns: list) -> pd.DataFrame:
-    """ניקוי מערך הנתונים על ידי הסרת ערכים NaN ו-inf."""
-    numeric_df = df.drop(columns=meta_columns, errors='ignore').select_dtypes(include=[float, int])
-    numeric_df = numeric_df.fillna(0).replace([np.inf, -np.inf], 0)
-    return pd.concat([df[meta_columns], numeric_df], axis=1)
+    approach = st.radio("Choose an approach:", ["Compare Cities", "Compare Parties"])
 
-# ====================== דפי הממשק הראשי ======================
-if page == "הצגת הנתונים":
-    st.title("\U0001F4C8 הצגת הנתונים")
-    st.write("### כל הנתונים")
-    cleaned_data = clean_transposed_df(data)
-    st.write(cleaned_data)
+    st.subheader("2) Choose a column to group by and an aggregation function")
 
-    st.write("### מידע על הנתונים")
-    st.write("**צורת הנתונים (שורות, עמודות):**", cleaned_data.shape)
-    st.write("**סיכום הנתונים:**")
-    st.write(cleaned_data.describe())
+    group_col = st.selectbox("Select the column to group by:", df.columns)
+    agg_option = st.selectbox("Select the aggregation function:", ["sum", "mean", "count"])
 
-elif page == "ניתוח נתונים לפי ערים":
-    st.title("\U0001F3DB️ ניתוח נתונים לפי ערים")
+    st.subheader("3) Remove Sparse Columns (Threshold)")
+    threshold_val = st.slider("Minimum total sum to keep a column:", 0, 10000, 1000)
 
-    aggregated_df = data.groupby('city_name').sum().reset_index()
-    cleaned_aggregated_df = clean_transposed_df(aggregated_df)
-    st.write(cleaned_aggregated_df)
+    st.subheader("4) Set the number of PCA components")
+    num_components = st.slider("Number of principal components:", 2, 5, 2)
 
-    city = st.selectbox("בחר עיר:", cleaned_aggregated_df['city_name'])
-    city_data = cleaned_aggregated_df[cleaned_aggregated_df['city_name'] == city]
+    if st.button("Run Analysis"):
+        try:
+            # ============= Compare Cities =============
+            if approach == "Compare Cities":
+                # Perform grouping by the selected column
+                grouped_df = group_and_aggregate_data(df, group_col, agg_option)
 
-    st.write(f"### פיזור הקולות למפלגות ב-{city}")
-    city_votes = city_data.drop(columns=['city_name']).T
-    city_votes.columns = ['Votes']
-    fig = px.bar(city_votes, x=city_votes.index, y='Votes', title=f"פיזור הקולות למפלגות ב-{city}")
-    st.plotly_chart(fig)
+                # Remove sparse columns
+                cleaned_df = remove_sparse_columns(grouped_df, threshold_val)
 
-elif page == "ניתוח נתונים לפי מפלגות":
-    st.title("\U0001F9B0 ניתוח נתונים לפי מפלגות")
+                # Check if there's enough data
+                if cleaned_df.shape[1] < 2:
+                    st.error("Not enough numeric columns remain after removing sparse columns.")
+                    st.stop()
 
-    transposed_df = data.set_index('city_name').T.reset_index()
-    transposed_df = transposed_df.loc[:, ~transposed_df.columns.duplicated()]  # הסרת עמודות כפולות
-    transposed_df.rename(columns={'index': 'party_name'}, inplace=True)
-    cleaned_transposed_df = clean_transposed_df(transposed_df)
-    st.write(cleaned_transposed_df)
+                # Keep group_col as metadata if it still exists
+                meta_cols = [group_col] if group_col in cleaned_df.columns else []
 
-    threshold = st.slider("בחר את הסף המינימלי של קולות לתצוגה:", 100, 1000, 500)
-    numeric_df = cleaned_transposed_df.select_dtypes(include=[float, int])
-    filtered_df = cleaned_transposed_df[numeric_df.sum(axis=1) > threshold]
+                # Perform PCA
+                reduced_df = dimensionality_reduction(
+                    cleaned_df,
+                    num_components=num_components,
+                    meta_columns=meta_cols
+                )
 
-    st.write("### פיזור הקולות למפלגות")
-    fig = px.bar(filtered_df, x='party_name', y=filtered_df.columns[1:], title="פיזור הקולות למפלגות")
-    st.plotly_chart(fig)
+                st.subheader("Reduced Dataset (City-Wise)")
+                st.dataframe(reduced_df.head())
 
-elif page == "הפחתת ממדים באמצעות PCA":
-    st.title("\U0001F5E3️ הפחתת ממדים באמצעות PCA")
+                # Plot
+                if num_components >= 2:
+                    fig_cities = px.scatter(
+                        reduced_df,
+                        x='PC1',
+                        y='PC2',
+                        hover_data=meta_cols,
+                        title='Cities PCA Visualization'
+                    )
+                    st.plotly_chart(fig_cities)
 
-    meta_columns = ['city_name']
-    cleaned_data = clean_data(data, meta_columns)
+            # ============= Compare Parties =============
+            else:
+                # Force the grouping column to be 'city_name' if user picked something else
+                if group_col != 'city_name':
+                    st.warning("For Compare Parties, the grouping column should be 'city_name'. Overriding your choice.")
+                    group_col = 'city_name'
 
-    def dimensionality_reduction(df: pd.DataFrame, num_components: int, meta_columns: list) -> pd.DataFrame:
-        meta_df = df[meta_columns]
-        data_df = df.drop(columns=meta_columns)
-        standardized_data = (data_df - data_df.mean()) / data_df.std()
-        cov_matrix = np.cov(standardized_data.T)
-        eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
-        sorted_indices = np.argsort(eigenvalues)[::-1]
-        selected_eigenvectors = eigenvectors[:, sorted_indices[:num_components]]
-        pca_data = np.dot(standardized_data, selected_eigenvectors)
-        pca_df = pd.DataFrame(pca_data, columns=[f'PC{i+1}' for i in range(num_components)])
-        return pd.concat([meta_df, pca_df], axis=1)
+                grouped_df = group_and_aggregate_data(df, group_col, agg_option)
+                cleaned_df = remove_sparse_columns(grouped_df, threshold_val)
 
-    num_components = st.slider("בחר את מספר הממדים:", 2, 5, 2)
-    reduced_df = dimensionality_reduction(cleaned_data, num_components, meta_columns)
-    cleaned_reduced_df = clean_transposed_df(reduced_df)
-    st.write("### הנתונים לאחר הפחתת ממדים")
-    st.write(cleaned_reduced_df)
+                if cleaned_df.shape[1] < 2:
+                    st.error("Not enough numeric columns remain after removing sparse columns.")
+                    st.stop()
 
-    st.write("### תרשים אינטראקטיבי של הממדים")
-    fig = px.scatter(cleaned_reduced_df, x='PC1', y='PC2', hover_data=['city_name'], title="המחשה של PCA")
-    st.plotly_chart(fig)
+                # Transpose so that each row becomes a party
+                transposed_df = cleaned_df.set_index(group_col).T
 
-st.sidebar.write("\U0001F680 **פותח על ידי הקבוצה המעולה **")
+                # Again, remove columns (now cities) that are below threshold
+                col_sums = transposed_df.sum(axis=0)
+                low_cols = col_sums[col_sums < threshold_val].index
+                transposed_df.drop(columns=low_cols, inplace=True)
+
+                if transposed_df.shape[1] < 1:
+                    st.error("No columns left after removing low-vote cities. Cannot perform PCA.")
+                    st.stop()
+
+                # Move index to 'party_name'
+                transposed_df.reset_index(inplace=True)
+                transposed_df.rename(columns={'index': 'party_name'}, inplace=True)
+
+                # If there's still insufficient data for PCA, abort
+                if transposed_df.shape[1] < 3:
+                    st.error("Not enough columns to perform PCA (need at least party_name + 2 numeric columns).")
+                    st.stop()
+
+                meta_cols_parties = ['party_name']
+                reduced_df = dimensionality_reduction(
+                    transposed_df,
+                    num_components=num_components,
+                    meta_columns=meta_cols_parties
+                )
+
+                # Strip any imaginary part
+                reduced_df = reduced_df.applymap(lambda x: x.real if isinstance(x, complex) else x)
+
+                st.subheader("Reduced Dataset (Party-Wise)")
+                st.dataframe(reduced_df.head())
+
+                if num_components >= 2:
+                    fig_parties = px.scatter(
+                        reduced_df,
+                        x='PC1',
+                        y='PC2',
+                        hover_data=meta_cols_parties,
+                        title='Parties PCA Visualization'
+                    )
+                    st.plotly_chart(fig_parties)
+
+        except Exception as e:
+            st.error(f"Error while processing data: {e}")
+
+else:
+    st.info("Please upload a dataset to proceed.")
+
+st.write("---")
+st.write("This Streamlit app follows the specified requirements for a basic dimensionality reduction UI.")
