@@ -21,6 +21,9 @@ if uploaded_file is not None:
     else:
         df = pd.read_excel(uploaded_file)
 
+    # Ensure numeric columns only
+    df = df.select_dtypes(include=['number']).dropna()
+
     st.subheader("1) Dataset Preview")
     st.dataframe(df.head())
 
@@ -48,19 +51,19 @@ if uploaded_file is not None:
                 cleaned_df = remove_sparse_columns(grouped_df, threshold_val)
 
                 # Check if there's enough data
-                if cleaned_df.shape[1] < 2:
+                if cleaned_df.shape[1] < num_components:
                     st.error("Not enough numeric columns remain after removing sparse columns.")
                     st.stop()
-
-                # Keep group_col as metadata if it still exists
-                meta_cols = [group_col] if group_col in cleaned_df.columns else []
 
                 # Perform PCA
                 reduced_df = dimensionality_reduction(
                     cleaned_df,
                     num_components=num_components,
-                    meta_columns=meta_cols
+                    meta_columns=[group_col] if group_col in cleaned_df.columns else []
                 )
+
+                # Remove complex values
+                reduced_df = reduced_df.applymap(lambda x: x.real if isinstance(x, complex) else x)
 
                 st.subheader("Reduced Dataset (City-Wise)")
                 st.dataframe(reduced_df.head())
@@ -71,7 +74,7 @@ if uploaded_file is not None:
                         reduced_df,
                         x='PC1',
                         y='PC2',
-                        hover_data=meta_cols,
+                        hover_data=[group_col] if group_col in reduced_df.columns else [],
                         title='Cities PCA Visualization'
                     )
                     st.plotly_chart(fig_cities)
@@ -93,7 +96,7 @@ if uploaded_file is not None:
                 # Transpose so that each row becomes a party
                 transposed_df = cleaned_df.set_index(group_col).T
 
-                # Again, remove columns (now cities) that are below threshold
+                # Remove sparse cities
                 col_sums = transposed_df.sum(axis=0)
                 low_cols = col_sums[col_sums < threshold_val].index
                 transposed_df.drop(columns=low_cols, inplace=True)
@@ -102,23 +105,22 @@ if uploaded_file is not None:
                     st.error("No columns left after removing low-vote cities. Cannot perform PCA.")
                     st.stop()
 
-                # Move index to 'party_name'
+                # Rename index and prepare for PCA
                 transposed_df.reset_index(inplace=True)
                 transposed_df.rename(columns={'index': 'party_name'}, inplace=True)
 
-                # If there's still insufficient data for PCA, abort
-                if transposed_df.shape[1] < 3:
-                    st.error("Not enough columns to perform PCA (need at least party_name + 2 numeric columns).")
+                # If there's insufficient data for PCA
+                if transposed_df.shape[1] < num_components + 1:
+                    st.error("Not enough columns to perform PCA (need at least party_name + required numeric columns).")
                     st.stop()
 
-                meta_cols_parties = ['party_name']
                 reduced_df = dimensionality_reduction(
                     transposed_df,
                     num_components=num_components,
-                    meta_columns=meta_cols_parties
+                    meta_columns=['party_name']
                 )
 
-                # Strip any imaginary part
+                # Remove complex values
                 reduced_df = reduced_df.applymap(lambda x: x.real if isinstance(x, complex) else x)
 
                 st.subheader("Reduced Dataset (Party-Wise)")
@@ -129,7 +131,7 @@ if uploaded_file is not None:
                         reduced_df,
                         x='PC1',
                         y='PC2',
-                        hover_data=meta_cols_parties,
+                        hover_data=['party_name'],
                         title='Parties PCA Visualization'
                     )
                     st.plotly_chart(fig_parties)
