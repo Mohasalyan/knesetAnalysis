@@ -1,151 +1,108 @@
-# **🎉 Knesset Elections Data Analysis and Visualization Project**
+Knesset Elections Data Analysis
 
-## **📘 Project Overview**  
-The **Knesset Elections Data Analysis and Visualization Project** is an interactive, user-friendly application built using **Streamlit** and **Pandas**. It allows users to explore and analyze voting patterns from the **25th Knesset elections**.  
+1. Project Overview
 
-With dynamic visualizations and easy-to-navigate features, this project is ideal for researchers, students, and anyone interested in gaining insights into election results across different cities and political parties.
+This project provides a detailed workflow for analyzing Knesset elections data, including data loading, preprocessing, dimensionality reduction using Principal Component Analysis (PCA) implemented from scratch, and data visualization. Additionally, the project includes a Streamlit application for interactive exploration.
 
----
+2. Repository Structure
 
-## **🎯 Key Features**  
-- **🔍 Interactive Exploration**: A clean and intuitive interface to interact with election data.  
-- **🏛 City-Based Analysis**: Filter data by selecting specific cities.  
-- **📊 Dynamic Visualizations**: Interactive charts (scatter and bar charts) to compare voting patterns.  
-- **🗃️ Raw Data View**: Browse through detailed voting results in a clear, tabular format.  
-- **🚀 Real-Time Updates**: Data and charts update dynamically based on user selections.  
+.
+├── data
+│   └── knesset_25.xlsx       # Example dataset (Excel or CSV)
+├── functions.py              # Core Python functions
+├── Analysis.ipynb            # Jupyter Notebook demonstrating usage of all functions
+├── app.py                    # Streamlit application
+└── README.md                 # This README file
 
----
+2.1 functions.py
 
-## **🗁 Project Structure**  
-```plaintext
-TASK1/
-├── 📁 data
-│   └── knesset_25.xlsx         # Excel file containing voting results
-├── 🔢 All Functions.py      # Consolidated functions for reuse
-├── 📃 app.py                 # Main Streamlit application logic
-├── 🔢 Data Preprocessing.ipynb # Data cleaning and transformation notebook
-├── 🔢 Data Visualization.ipynb # Notebooks for visualization experiments
-├── 🔢 Knesset Data Analysis Project.ipynb # Core analysis logic notebook
-└── 📃 README.md            # Project documentation (this file)
-```
+Contains all required functions:
+	•	load_data(filepath: str) -> pd.DataFrame
+	•	group_and_aggregate_data(df: pd.DataFrame, group_by_column: str, agg_func) -> pd.DataFrame
+	•	remove_sparse_columns(df: pd.DataFrame, threshold: int) -> pd.DataFrame
+	•	dimensionality_reduction(df: pd.DataFrame, num_components: int, meta_columns: list[str]) -> pd.DataFrame
 
----
+2.2 Analysis.ipynb
 
-## **🚀 Technologies Used**  
-- **Python**: Core programming language for processing and analysis.  
-- **Pandas**: For efficient data manipulation and aggregation.  
-- **Streamlit**: To create an interactive and intuitive web application.  
-- **Plotly**: For interactive, dynamic visualizations.  
-- **Excel**: Dataset stored in an accessible Excel format.  
+Demonstrates how to:
+	•	Load data.
+	•	Aggregate data by grouping columns.
+	•	Remove sparse columns.
+	•	Perform PCA with a user-defined number of components.
+	•	Visualize PCA results in both 2D and 3D using Plotly.
 
----
+2.3 app.py
 
-## **⚙️ Setup and Installation**  
+A Streamlit interface that allows users to:
+	•	Upload datasets (CSV or Excel).
+	•	Select grouping and aggregation functions.
+	•	Define thresholds for removing sparse columns.
+	•	Perform PCA with a user-defined number of components.
+	•	Visualize PCA results in 2D or 3D.
 
-To run this project on your local machine:  
+3. Requirements
 
-1. **Install Required Libraries**:  
-   ```bash
-   pip install streamlit pandas openpyxl plotly
-   ```
+The following libraries are required:
+	•	pandas
+	•	numpy
+	•	plotly
+	•	streamlit
+	•	openpyxl (for Excel file support)
 
-2. **Run the Application**:  
-   ```bash
-   streamlit run app.py
-   ```
+Install them using:
 
-3. **View the Application**:  
-   Open your web browser and navigate to [http://localhost:8501/](http://localhost:8501/).  
+pip install pandas numpy plotly streamlit openpyxl
 
----
+4. How to Run
 
-## **📊 Data Explanation**  
+4.1 Running the Jupyter Notebook
+	1.	Open a terminal in the project folder.
+	2.	Launch the notebook:
 
-The main dataset is stored in `knesset_25.xlsx` and has the following structure:  
+jupyter notebook Analysis.ipynb
 
-| **Column**       | **Description**                                 |  
-|------------------|-----------------------------------------------|  
-| `city_name`      | Name of the city where votes were counted      |  
-| `total_votes`    | Total number of votes cast in that city        |  
-| `party_1`        | Number of votes received by Party 1            |  
-| `party_2`        | Number of votes received by Party 2            |  
-| ...              | Columns for other parties                      |  
 
----
+	3.	Follow the sequential cells to see the workflow.
 
-## **📱 How to Use the Application**  
+4.2 Running the Streamlit App
+	1.	From the project directory, run:
 
-1. **Start the Application**: Run the command `streamlit run app.py`.  
-2. **Explore the Data**:  
-   - Use the **City Dropdown** to select a city and view its voting data.  
-   - Browse the raw **Data Table** to see detailed results.  
-   - Analyze the interactive **Charts** that visualize votes per party.  
-3. **Compare Results**: Switch between cities to analyze differences in voting patterns.  
+streamlit run app.py
 
----
 
-## **🔢 Code Walkthrough**  
+	2.	Access the app at http://localhost:8501.
 
-The main logic of the application (`app.py`) is divided into the following steps:  
+In the app, you can:
+	•	Upload a dataset.
+	•	Select grouping and aggregation options.
+	•	Remove sparse columns using a threshold slider.
+	•	Perform PCA and visualize the results interactively.
 
-1. **Import Libraries**:  
-   ```python
-   import streamlit as st
-   import pandas as pd
-   import plotly.express as px
-   ```
+5. Key Updates
+	•	Support for Numerical Columns Only: Ensured only numeric columns are processed for aggregation and PCA.
+	•	2D and 3D Visualizations: Added dynamic visualization options based on the number of PCA components:
+	•	2D scatter plots for 2 components.
+	•	3D scatter plots for 3 components.
+	•	Warning for PCA components exceeding 3.
+	•	Error Handling: Improved error messages for insufficient data, sparse columns, and missing metadata.
+	•	Transposed Data Support: Transpose functionality for “Compare Parties” to analyze data by party.
 
-2. **Load and Display Data**:  
-   ```python
-   # Load Excel Data
-   file_path = "data/knesset_25.xlsx"
-   data = pd.read_excel(file_path)
+6. File Details
 
-   # Display Data
-   st.title("📊 Knesset Elections Data Viewer")
-   st.write("### Explore Votes Across Cities")
-   st.dataframe(data)
-   ```
+6.1 functions.py
+	•	load_data(filepath: str) -> pd.DataFrame: Load datasets from CSV or Excel files.
+	•	group_and_aggregate_data(df: pd.DataFrame, group_by_column: str, agg_func) -> pd.DataFrame: Groups data by the specified column and applies aggregation.
+	•	remove_sparse_columns(df: pd.DataFrame, threshold: int) -> pd.DataFrame: Removes columns with a total sum below the threshold.
+	•	dimensionality_reduction(df: pd.DataFrame, num_components: int, meta_columns: list[str]) -> pd.DataFrame: PCA implementation with support for metadata columns.
 
-3. **Interactive Visualization**:  
-   ```python
-   # Dropdown to Select City
-   city = st.selectbox("Select a City", data["city_name"].unique())
+6.2 Analysis.ipynb
+	•	Demonstrates the workflow for data preprocessing and PCA with Plotly visualizations.
 
-   # Filter Data
-   city_data = data[data["city_name"] == city]
+6.3 app.py
+	•	Interactive app for data upload, aggregation, sparse column removal, PCA, and visualizations.
+	•	Includes both 2D and 3D scatter plots for PCA results.
 
-   # Plot Chart
-   chart = px.bar(
-       city_data.melt(id_vars=["city_name"], value_vars=data.columns[2:]),
-       x="variable",
-       y="value",
-       title=f"Votes by Party in {city}",
-       labels={"variable": "Party", "value": "Votes"}
-   )
-   st.plotly_chart(chart)
-   ```
-
----
-
-## **🛠️ Possible Future Improvements**  
-- **🔁 Additional Visualizations**: Add comparative views, heatmaps, and advanced statistics.  
-
-- **🔎 Advanced Filters**: Filter by regions, vote thresholds, or specific parties.  
-- **🔋 Performance Optimization**: Handle larger datasets more efficiently.  
-- **🔑 Data Export**: Allow users to download filtered data as CSV or Excel files.  
-
----
-
-## **🔖 Contributing**  
-We welcome contributions to improve this project! Feel free to fork, open issues, or submit pull requests.  
-
----
-
-## **🙏 Acknowledgments**  
-This project was inspired by the need for accessible election data analysis tools to empower researchers and enthusiasts.  
-
----
-
-**🚀 Start exploring the Knesset elections data now!**
-
+7. Additional Notes
+	•	Ensure your dataset path is correct in both the notebook and the app.
+	•	Larger datasets may require performance optimizations.
+	•	The PCA implementation is simplified to illustrate the concept without external libraries like scikit-learn.

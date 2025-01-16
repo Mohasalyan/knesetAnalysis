@@ -30,8 +30,9 @@ if uploaded_file is not None:
     approach = st.radio("Choose an approach:", ["Compare Cities", "Compare Parties"])
 
     st.subheader("2) Choose a column to group by and an aggregation function")
+    columns_for_groupby = [col for col in df.columns if col != 'ballot_code']
 
-    group_col = st.selectbox("Select the column to group by:", df.columns)
+    group_col = st.selectbox("Select the column to group by:", columns_for_groupby)
     agg_option = st.selectbox("Select the aggregation function:", ["sum", "mean", "count"])
 
     st.subheader("3) Remove Sparse Columns (Threshold)")
@@ -69,15 +70,31 @@ if uploaded_file is not None:
                 st.dataframe(reduced_df.head())
 
                 # Plot
-                if num_components >= 2:
+                if num_components == 2:
+                    # 2D plotting
                     fig_cities = px.scatter(
                         reduced_df,
                         x='PC1',
                         y='PC2',
                         hover_data=[group_col] if group_col in reduced_df.columns else [],
-                        title='Cities PCA Visualization'
+                        title='Cities PCA Visualization (2D)'
                     )
                     st.plotly_chart(fig_cities)
+
+                elif num_components == 3:
+                    # 3D plotting
+                    fig_cities = px.scatter_3d(
+                        reduced_df,
+                        x='PC1',
+                        y='PC2',
+                        z='PC3',
+                        hover_data=[group_col] if group_col in reduced_df.columns else [],
+                        title='Cities PCA Visualization (3D)'
+                    )
+                    st.plotly_chart(fig_cities)
+
+                else:
+                    st.warning("‏Cannot draw more than 3 PCAs")
 
             # ============= Compare Parties =============
             else:
@@ -126,15 +143,34 @@ if uploaded_file is not None:
                 st.subheader("Reduced Dataset (Party-Wise)")
                 st.dataframe(reduced_df.head())
 
-                if num_components >= 2:
+                st.subheader("Reduced Dataset (Party-Wise)")
+                st.dataframe(reduced_df.head())
+                
+                # 2D plotting
+                if num_components == 2:
                     fig_parties = px.scatter(
                         reduced_df,
                         x='PC1',
                         y='PC2',
                         hover_data=['party_name'],
-                        title='Parties PCA Visualization'
+                        title='Parties PCA Visualization (2D)'
                     )
                     st.plotly_chart(fig_parties)
+                    
+                # 3D plotting
+                elif num_components == 3:
+                    fig_parties = px.scatter_3d(
+                        reduced_df,
+                        x='PC1',
+                        y='PC2',
+                        z='PC3',
+                        hover_data=['party_name'],
+                        title='Parties PCA Visualization (3D)'
+                    )
+                    st.plotly_chart(fig_parties)
+
+                else:
+                    st.warning("‏Cannot draw more than 3 PCAs")
 
         except Exception as e:
             st.error(f"Error while processing data: {e}")
